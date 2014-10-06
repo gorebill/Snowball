@@ -10,7 +10,7 @@ $(document).ready(function() {
     if($(".controller-issues").length && $("#snowball-vote").length) {
         var clr = $("<div></div>").css({ clear: "right" });
         var queue = [];
-        $(".issue").each(
+        $("div.issue").each(
             function() {
                 queue.push($(this));
             }
@@ -25,7 +25,7 @@ $(document).ready(function() {
         var queueStep = function(that) {
             var deferred = $.Deferred();
             var vote = $("#snowball-vote").clone().attr({ id: null });
-            $(vote).insertBefore(".issue").show();
+            $(vote).insertBefore("div.issue").show();
             //that.css({ "clear": "both" }).prepend(vote);
 
             var issue = vote.data("issue");
