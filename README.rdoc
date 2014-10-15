@@ -1,3 +1,8 @@
 = snowball
 
-Description goes here
+Redmine Plugin
+
+目前包括
+1. project vote
+2. github集成(开发中)
+
