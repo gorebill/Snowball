@@ -39,14 +39,11 @@ module SnowballRepoHelperPatch
     def github_field_tags_with_add(form, repository)
       puts "** steps in github_field_tags_with_add"
 
-      puts '** ck pt 1'
-      # return ''
 
       urltag = form.text_field(:url, :size => 60,
                                :required => true,
                                :disabled => !repository.safe_attribute?('url'))
 
-      puts '** ck pt 2'
       if repository.new_record? && GithubCreator.enabled? && !limit_exceeded
         if defined? observe_field # Rails 3.0 and below
           add = submit_tag(l(:button_create_new_repository), :onclick => "$('repository_operation').value = 'add';")
@@ -60,15 +57,15 @@ module SnowballRepoHelperPatch
           if defined? observe_field # Rails 3.0 and below
             urltag << javascript_tag("$('repository_url').value = '#{escape_javascript(path)}';")
           else # Rails 3.1 and above
+            # TODO: 这里是值,一般pattern应该是https://github.com/用户名/path.git
             urltag << javascript_tag("$('#repository_url').val('#{escape_javascript(path)}');")
           end
         end
-        note = l(:text_github_repository_note_new)
+        note = "#{l(:text_github_repository_note_new)} (eg. https://github.com/gorebill/test.git)"
       elsif repository.new_record?
         note = '(https://github.com/)'
       end
 
-      puts '** ck pt 3'
       githubtags  = content_tag('p', urltag + '<br />'.html_safe + note)
       githubtags << content_tag('p', form.text_field(:login, :size => 30)) +
           content_tag('p', form.password_field(:password, :size => 30,
@@ -78,14 +75,13 @@ module SnowballRepoHelperPatch
                                                :onchange => "this.name='repository[password]';") +
               '<br />'.html_safe + l(:text_github_credentials_note))
 
+      # FIXME: 这里会出错? 粗略判定是Setting的@api找不到
       # if !Setting.autofetch_changesets? && GithubCreator.can_register_hook?
       #   puts '** ck pt 4'
       #   githubtags << content_tag('p', form.check_box(:extra_register_hook, :disabled => repository.extra_hook_registered) + ' ' +
       #       l(:text_github_register_hook_note))
       # end
 
-
-      puts '** ck pt 5'
 
       githubtags
     end

@@ -26,7 +26,6 @@ module SnowballGithub
       def self.scm_adapter_class
         puts "** asking scm_adapter_class in SnowballGithub"
 
-        # TODO: change to GithubAdapter
         Redmine::Scm::Adapters::SnowballGithubAdapter
       end
 
@@ -190,7 +189,7 @@ module SnowballGithub
     def register_hook_with_add
       puts "** register_hook(#{self.scm_name}): it's going to register hook?"
 
-      # FIXME: it should NOT excute this code if adapter set
+      # FIXME: nothing to do presently
 
       return
     end

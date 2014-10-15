@@ -6,7 +6,7 @@ module SnowballGithubCreatorPatch
     base.extend(ClassMethods)
     base.send(:include, InstanceMethods)
 
-    puts "** including SnowballGithub"
+    puts "** including SnowballGithubCreatorPatch"
 
     base.class_eval do
       unloadable
