@@ -1,5 +1,32 @@
+require 'redmine'
+require 'snowball_repo_helper_patch'
+require 'snowball_github'
 
 require_dependency 'snowball_hook_listener'
+require_dependency 'scm_repositories_helper_patch'
+#require_dependency 'snowball_repo_helper_patch'
+
+Rails.configuration.to_prepare do
+  #unless Project.included_modules.include?(ScmProjectPatch)
+  #  Project.send(:include, ScmProjectPatch)
+  #end
+
+  unless ScmRepositoriesHelperPatch::InstanceMethods.included_modules.include?(SnowballRepoHelperPatch)
+    ScmRepositoriesHelperPatch::InstanceMethods.send(:include, SnowballRepoHelperPatch)
+  end
+
+  unless Repository::Github.included_modules.include?(SnowballGithub)
+    Repository::Github.send(:include, SnowballGithub)
+  end
+
+  unless GithubCreator.included_modules.include?(SnowballGithubCreatorPatch)
+    GithubCreator.send(:include, SnowballGithubCreatorPatch)
+  end
+
+  #unless RepositoriesController.included_modules.include?(ScmRepositoriesControllerPatch)
+  #  RepositoriesController.send(:include, ScmRepositoriesControllerPatch)
+  #end
+end
 
 Redmine::Plugin.register :snowball do
   name 'Snowball plugin'
@@ -46,4 +73,14 @@ Redmine::Plugin.register :snowball do
     #menu :project_menu, :snowball, { :controller => 'snowball_project_vote', :action => 'test' }, :caption => '开源社区Project Menu', :after => :activity, :param => :project_id
   #end
 
+
+  #追加github建库设置
+  # settings :default => {},
+  #          :partial => 'settings/snowball_github_settings'
+
+
 end
+
+
+#Redmine::Scm::Base.add('Github')
+
