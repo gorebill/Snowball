@@ -2,6 +2,8 @@
 
 require_dependency 'adapters/snowball_github_adapter'
 
+
+# FIXME: 这里应该改成patch, 因为init.rb里面是patch Repository::Github的
 module SnowballGithub
 
   def self.included(base)

@@ -23,6 +23,10 @@ Rails.configuration.to_prepare do
     GithubCreator.send(:include, SnowballGithubCreatorPatch)
   end
 
+  unless ScmRepositoriesControllerPatch::InstanceMethods.included_modules.include?(SnowballRepoControllerGithubPatch)
+    ScmRepositoriesControllerPatch::InstanceMethods.send(:include, SnowballRepoControllerGithubPatch)
+  end
+
   #unless RepositoriesController.included_modules.include?(ScmRepositoriesControllerPatch)
   #  RepositoriesController.send(:include, ScmRepositoriesControllerPatch)
   #end
