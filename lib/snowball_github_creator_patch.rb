@@ -1,70 +1,74 @@
+require 'octokit'
+
 require_dependency 'repository/github'
 
 module SnowballGithubCreatorPatch
 
   def self.included(base)
+    puts "** including SnowballGithubCreatorPatch"
+
     base.extend(ClassMethods)
     base.send(:include, InstanceMethods)
-
-    puts "** including SnowballGithubCreatorPatch"
 
     base.class_eval do
       unloadable
 
-      def self.github_configure(token)
-        puts "** calling github_configure in SnowballRepoControllerGithubPatch"
-
-        Repository::Github.client(endpoint: (ScmConfig['github']['url'].to_s + '/api/v3'), private_token: token)
-      end
-
-      # title is the repository name
-      # project_identifier is the group name
-      def self.github_create(attrs)
-        puts "** calling github_create in SnowballRepoControllerGithubPatch"
-
-        if attrs['project_identifier'].nil?
-          raise("no group id in attrs['project_identifier']")
-        end
-
-        github = self.github_configure(attrs['token'])
-
-        # ready to check github project exist
-        github_project_data = nil
-        begin
-          github_project_data = github.project(attrs['title'])
-        rescue Exception => e
-          puts e
-        end
-
-        if github_project_data.nil?
-          github_project_data = github.create_project(attrs['title'], description: attrs['description'], visibility_level: attrs['visibility'])
-        end
-
-        # ready to check github group exist
-        github_group_data = nil
-        begin
-          github_group_data = github.group(attrs['project_identifier'])
-        rescue Exception => e
-          puts e
-        end
-
-        if github_group_data.nil?
-          github_group_data = github.create_group(attrs['project_identifier'], attrs['project_identifier'])
-        end
-
-        # ready to do transfer
-        if github_project_data.namespace.name != github_group_data.name
-          github.transfer_project_to_group(github_group_data.id, github_project_data.id)
-        end
-
-
-
-
-        # add webhook
-        # http://zyac-open.chinacloudapp.cn:3000/github_hook?project_id=test_project&key=j2g7kds9341hj6sdk
-        webhook_url = Setting.protocol.downcase + '://' + Setting.host_name + '/github_hook?project_id=' + attrs['project_identifier'] + '&key=' + Setting.sys_api_key
-        github.add_project_hook(github_project_data.id, webhook_url)
-      end
+      # def self.github_configure(token)
+      #   puts "** calling github_configure in SnowballRepoControllerGithubPatch"
+      #
+      #   Repository::Github.client(endpoint: (ScmConfig['github']['url'].to_s + '/api/v3'), private_token: token)
+      # end
+      #
+      # # title is the repository name
+      # # project_identifier is the group name
+      # def self.github_create(attrs)
+      #   puts "** calling github_create in SnowballRepoControllerGithubPatch"
+      #
+      #   puts "** attrs= #{attrs}"
+      #
+      #   if attrs['project_identifier'].nil?
+      #     raise("no group id in attrs['project_identifier']")
+      #   end
+      #
+      #   #github = self.github_configure(attrs['token'])
+      #
+      #   # ready to check github project exist
+      #   github_project_data = nil
+      #   begin
+      #     github_project_data = github.project(attrs['title'])
+      #   rescue Exception => e
+      #     puts e
+      #   end
+      #
+      #   if github_project_data.nil?
+      #     github_project_data = github.create_project(attrs['title'], description: attrs['description'], visibility_level: attrs['visibility'])
+      #   end
+      #
+      #   # ready to check github group exist
+      #   github_group_data = nil
+      #   begin
+      #     github_group_data = github.group(attrs['project_identifier'])
+      #   rescue Exception => e
+      #     puts e
+      #   end
+      #
+      #   if github_group_data.nil?
+      #     github_group_data = github.create_group(attrs['project_identifier'], attrs['project_identifier'])
+      #   end
+      #
+      #   # ready to do transfer
+      #   if github_project_data.namespace.name != github_group_data.name
+      #     github.transfer_project_to_group(github_group_data.id, github_project_data.id)
+      #   end
+      #
+      #
+      #
+      #
+      #   # add webhook
+      #   # http://zyac-open.chinacloudapp.cn:3000/github_hook?project_id=test_project&key=j2g7kds9341hj6sdk
+      #   webhook_url = Setting.protocol.downcase + '://' + Setting.host_name + '/github_hook?project_id=' + attrs['project_identifier'] + '&key=' + Setting.sys_api_key
+      #   github.add_project_hook(github_project_data.id, webhook_url)
+      # end
 
       def self.enabled?
         puts "** asking enable? in SnowballGithubCreatorPatch"
@@ -96,16 +100,31 @@ module SnowballGithubCreatorPatch
 
         attrs = {}
         # attrs['token'] = User.current.github_token;
-        # FIXME: 这里token没法填，先留空
-        attrs['token'] = 'foo';
-        attrs['title'] = repository.identifier;
-        attrs['description'] = 'this repository is created by zycode.';
-        attrs['visibility'] = true;
-        attrs['project_identifier'] = repository.project.identifier;
-        self.github_create(attrs);
+        # # FIXME: 这里token没法填，先留空
+        # attrs['token'] = 'foo';
+        # attrs['title'] = repository.identifier;
+        # attrs['description'] = 'this repository is created by zycode.';
+        # attrs['visibility'] = true;
+        # attrs['project_identifier'] = repository.project.identifier;
+        # self.github_create(attrs);
 
 
         # init git and do fetch
+        github=SnowballRepoGithub.find_by_repo_id(repository.id)
+
+
+        # ref: https://github.com/octokit/octokit.rb
+        # Provide authentication credentials
+        client = Octokit::Client.new(:login => github.github_username.to_s, :password => github.github_password.to_s)
+        # Fetch the current user
+        client.user
+
+
+        # args = [ hg_command, 'init' ]
+        # append_options(args)
+        # args << path
+        # system(*args)
+
 
         puts "** chdir to #{ScmConfig['github']['path']}"
 
@@ -114,12 +133,32 @@ module SnowballGithubCreatorPatch
           args = [ git_command, 'clone' ]
           append_options(args)
 
-          #--------set username & password in url------------
           # TODO http or https or ssh
-          tmp_url = repository.url.gsub("http://","")
-          tmp_url = repository.login + ':' + repository.password + '@' + tmp_url
+          # 不要加Scm的append
+          subfix_append=''#ScmConfig['github']['append'].to_s
 
-          args << ('http://' + tmp_url + ScmConfig['github']['append'].to_s)
+          tmp_url = URI(repository.url)
+
+          #reference http://www.ruby-doc.org/stdlib-1.9.3/libdoc/uri/rdoc/URI.html
+          tmp_url = [tmp_url.scheme ? tmp_url.scheme : 'http',
+                     '://',
+                     (repository.login ? repository.login + ':' + repository.password + '@' : ''),
+                     tmp_url.host,
+                     tmp_url.path,
+                     (tmp_url.query ? '?':''), tmp_url.query,
+                     subfix_append
+          ].join('')
+
+          puts "** composite github uri=#{tmp_url}"
+
+          # 这里需要强制加project-
+          args << tmp_url << default_path(repository.identifier)
+
+          # args << ('http://' + tmp_url + ScmConfig['github']['append'].to_s)
+
+          # tmp_url = repository.login + ':' + repository.password + '@' + tmp_url
+
+          # args << ('http://' + tmp_url + ScmConfig['github']['append'].to_s)
           #--------------------
 
 
@@ -138,8 +177,11 @@ module SnowballGithubCreatorPatch
             false
           end
         end
+      end
 
-
+      # just return the name, as it's remote repository
+      def default_path(identifier)
+        identifier
       end
 
       def self.access_root_url(path, repository)
@@ -151,6 +193,9 @@ module SnowballGithubCreatorPatch
       end
 
       def self.repository_name(path)
+
+        # ref: http://git-scm.com/docs/git-clone
+
         matches = %r{^(?:.*/)?([^/]+?)(\\.git)?/?$}.match(path)
         matches ? matches[1] : nil
       end

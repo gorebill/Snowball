@@ -379,7 +379,7 @@ module Redmine
           start_index = http_path.rindex('/')
           end_index = http_path.length
 
-          repo_path = ScmConfig['github']['path'].to_s + http_path[start_index,end_index] +ScmConfig['github']['append'].to_s
+          repo_path = ScmConfig['github']['path'].to_s + http_path[start_index,end_index]
 
           full_args = ['--git-dir', repo_path]
           if self.class.client_version_above?([1, 7, 2])

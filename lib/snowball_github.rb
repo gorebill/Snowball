@@ -7,10 +7,10 @@ require_dependency 'adapters/snowball_github_adapter'
 module SnowballGithub
 
   def self.included(base)
+    puts "** including SnowballGithub"
+
     base.extend(ClassMethods)
     base.send(:include, InstanceMethods)
-
-    puts "** including SnowballGithub"
 
     base.class_eval do
       unloadable

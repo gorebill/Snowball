@@ -3,10 +3,10 @@ require 'snowball_github'
 module SnowballRepoControllerGithubPatch
 
   def self.included(base)
+    puts "** including SnowballRepoControllerGithubPatch"
+
     base.extend(ClassMethods)
     base.send(:include, InstanceMethods)
-
-    puts "** including SnowballRepoControllerGithubPatch"
 
     base.class_eval do
       unloadable
@@ -41,6 +41,16 @@ module SnowballRepoControllerGithubPatch
 
       end
 
+      def init_github_token(repository,user,username,password)
+        puts "** calling init_github_token in SnowballRepoControllerGithubPatch repo.##{repository.type}"
+
+        github=SnowballRepoGithub.new
+        github.repo_id=repository.id
+        github.github_username=username #目前未用到
+        github.github_password=password #目前未用到
+        github.save
+      end
+
     end
 
     #base.send(:github_field_tags, nil, nil)
@@ -61,14 +71,9 @@ module SnowballRepoControllerGithubPatch
 
       if repository.type == 'Repository::Gitlab'
         fetch_set_token(user,username,password);
-      else
-        if repository.type == 'Repository::Github'
-
-          # FIXME: 这里需要研究
-          #github_fetch_set_token(user,username,password);
-        end
+      elsif repository.type == 'Repository::Github'
+        init_github_token(repository,user,username,password)
       end
-
     end
 
     def scm_create_repository_with_github(repository, interface, url)
@@ -80,8 +85,9 @@ module SnowballRepoControllerGithubPatch
         if interface.repository_exists?(name)
           repository.errors.add(:url, :already_exists)
         else
-          Rails.logger.info "Creating reporitory: #{path}"
+          Rails.logger.info "Creating repository: #{path}"
           interface.execute(ScmConfig['pre_create'], path, @project) if ScmConfig['pre_create']
+
           if result = interface.create_repository(path, repository)
             path = result if result.is_a?(String)
             interface.execute(ScmConfig['post_create'], path, @project) if ScmConfig['post_create']

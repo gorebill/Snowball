@@ -2,6 +2,13 @@ require 'redmine'
 require 'snowball_repo_helper_patch'
 require 'snowball_github'
 
+
+begin
+  require 'octokit'
+rescue LoadError
+  raise 'octokit not found!! please run `bundle install`'
+end
+
 require_dependency 'snowball_hook_listener'
 require_dependency 'scm_repositories_helper_patch'
 #require_dependency 'snowball_repo_helper_patch'
