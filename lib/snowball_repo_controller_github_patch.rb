@@ -98,7 +98,7 @@ module SnowballRepoControllerGithubPatch
           end
         end
 
-        repository.root_url = interface.access_root_url(path, repository)
+        #repository.root_url = interface.access_root_url(path, repository)
         repository.url      = interface.access_url(path, repository)
 
         if interface.local? && !interface.belongs_to_project?(name, @project.identifier)

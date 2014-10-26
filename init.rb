@@ -1,4 +1,5 @@
 require 'redmine'
+require 'github_hook/updater'
 require 'snowball_repo_helper_patch'
 require 'snowball_github'
 
@@ -32,6 +33,10 @@ Rails.configuration.to_prepare do
 
   unless ScmRepositoriesControllerPatch::InstanceMethods.included_modules.include?(SnowballRepoControllerGithubPatch)
     ScmRepositoriesControllerPatch::InstanceMethods.send(:include, SnowballRepoControllerGithubPatch)
+  end
+
+  unless GithubHook::Updater.included_modules.include?(SnowballGithubHookUpdaterPatch)
+    GithubHook::Updater.send(:include, SnowballGithubHookUpdaterPatch)
   end
 
   #unless RepositoriesController.included_modules.include?(ScmRepositoriesControllerPatch)

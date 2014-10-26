@@ -97,9 +97,9 @@ module SnowballRepoHelperPatch
         ")
 
         githubtags << javascript_tag("$('form#repository-form').bind('submit',function(){
-          var prefix=$(this).find('#identifier-prefix').text();
+          var prefix=$(this).find('#identifier-prefix').hide().text();
           var identifier=$(this).find('input#repository_identifier');
-          $(identifier).val(prefix + $(identifier).val());
+          $(identifier).val(prefix + $(identifier).val()).attr('readonly','readonly');
         });")
       end
 
