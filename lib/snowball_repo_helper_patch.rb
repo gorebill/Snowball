@@ -79,6 +79,7 @@ module SnowballRepoHelperPatch
 
 
       if repository.new_record?
+        # 追加project-的前缀显示
         githubtags << javascript_tag("$('<label>#{@project.identifier.to_s}-</label>')
           .insertBefore($('#repository_identifier'))
           .attr('id','identifier-prefix')
@@ -96,6 +97,12 @@ module SnowballRepoHelperPatch
           .css('border-bottom-left-radius','3px');
         ")
 
+        # 修正repo.identifier
+        githubtags << javascript_tag("$('input#repository_identifier').val(
+          $('input#repository_identifier').val().replace(/^#{@project.identifier.to_s}-/,''))
+        ");
+
+        # 提交时追加project-作为前缀
         githubtags << javascript_tag("$('form#repository-form').bind('submit',function(){
           var prefix=$(this).find('#identifier-prefix').hide().text();
           var identifier=$(this).find('input#repository_identifier');
@@ -104,58 +111,6 @@ module SnowballRepoHelperPatch
       end
 
       githubtags
-
-      # FIXME: 这里会出错? 粗略判定是Setting的@api找不到
-      # if !Setting.autofetch_changesets? && GithubCreator.can_register_hook?
-      #   puts '** ck pt 4'
-      #   githubtags << content_tag('p', form.check_box(:extra_register_hook, :disabled => repository.extra_hook_registered) + ' ' +
-      #       l(:text_github_register_hook_note))
-      # end
-
-
-      # githubtags = content_tag('p', form.text_field(
-      #     :url, :label => l(:gh_field_repository_url),
-      #     :size => 60, :required => true) +#, :readonly => 'readonly'
-      #     '<br />'.html_safe +
-      #     l(:gh_text_repository_url_note))
-      #
-      # githubtags << content_tag('p', form.text_field(:login, :size => 30))
-      # githubtags << content_tag('p', form.password_field(
-      #     :password, :size => 30, :name => 'ignore',
-      #     :value => ((repository.new_record? || repository.password.blank?) ? '' : ('x'*15)),
-      #     :onfocus => "this.value=''; this.name='repository[password]';",
-      #     :onchange => "this.name='repository[password]';"))
-      #
-      # puts "github field tag cp 1"
-      #
-      # githubtags << hidden_field_tag(:operation, 'add', :id => 'repository_operation')
-      # unless request.post?
-      #
-      #   puts "github field tag cp 2"
-      #
-      #   path = GithubCreator.access_root_url(path, repository)
-      #   if GithubCreator.repository_exists?(@project.identifier) && @project.respond_to?(:repositories)
-      #     offset = @project.repositories.select{ |r| r.created_with_scm }.size.to_s
-      #     if path.sub!(%r{\.git$}, '.' + offset + '.git').nil?
-      #       path << '.' + offset
-      #     end
-      #   end
-      #   if defined? observe_field # Rails 3.0 and below
-      #     githubtags << javascript_tag("$('repository_url').value = '#{escape_javascript(path)}';")
-      #   else # Rails 3.1 and above
-      #     githubtags << javascript_tag("$('#repository_url').val('#{escape_javascript(path)}');")
-      #     # add change identifier js
-      #
-      #   end
-      #   #gitlabtags << javascript_tag("$('#repository_identifier').bind('mouseleave',function(){console.log('ddd');};")
-      #   #githubtags << javascript_tag("$('#repository_identifier').change(function() { $('#repository_url').val('#{escape_javascript(path)}'+'/'+$('#repository_identifier').val());});")
-      #
-      #
-      #   githubtags
-      # end
-      #
-      # puts "github field tag cp 3"
-
     end
   end
 end

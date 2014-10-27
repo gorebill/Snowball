@@ -172,6 +172,7 @@ module SnowballGithubCreatorPatch
             # Fetch the current user
             client.user
 
+            # 参考github_creator
             hook_response=client.create_hook(
                 Octokit::Repository.from_url(repository.url.sub(%r{\.git$},'')),
                 'redmine',
@@ -190,7 +191,7 @@ module SnowballGithubCreatorPatch
                 }
             )
 
-            puts "** hooking to #{repository.url}: #{hook_response.to_attrs}"
+            puts "** hooked to #{repository.url}: #{hook_response.to_attrs}"
 
             hook_response.is_a?(Sawyer::Resource)
 
