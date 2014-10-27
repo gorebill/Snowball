@@ -109,15 +109,8 @@ module SnowballGithubCreatorPatch
         # self.github_create(attrs);
 
 
-        # init git and do fetch
-        github=SnowballRepoGithub.find_by_repo_id(repository.id)
-
-
-        # ref: https://github.com/octokit/octokit.rb
-        # Provide authentication credentials
-        client = Octokit::Client.new(:login => github.github_username.to_s, :password => github.github_password.to_s)
-        # Fetch the current user
-        client.user
+        # 获取一些额外的参数，目前未用到
+        github_extra=SnowballRepoGithub.find_by_repo_id(repository.id)
 
 
         # args = [ hg_command, 'init' ]
@@ -172,11 +165,44 @@ module SnowballGithubCreatorPatch
                 system(*args)
               end
             end
-            true
+
+            # ref: https://github.com/octokit/octokit.rb
+            # Provide authentication credentials
+            client = Octokit::Client.new(:login => repository.login.to_s, :password => repository.password.to_s)
+            # Fetch the current user
+            client.user
+
+            hook_response=client.create_hook(
+                Octokit::Repository.from_url(repository.url.sub(%r{\.git$},'')),
+                'redmine',
+                {
+                    :address                             => "#{Setting.protocol}://#{Setting.host_name}",
+                    :project                             => repository.project.identifier,
+                    :api_key                             => Setting.sys_api_key,
+                    :fetch_commits                       => 1,
+                    :update_redmine_issues_about_commits => 1
+                    # :url => Setting.protocol.downcase + '://' + Setting.host_name + "/github_hook?project_id=#{repository.project.identifier}&repository_id=#{repository.identifier}",
+                    # :content_type => 'json'
+                },
+                {
+                    :events => ['push', 'pull_request'],
+                    :active => true
+                }
+            )
+
+            puts "** hooking to #{repository.url}: #{hook_response.to_attrs}"
+
+            hook_response.is_a?(Sawyer::Resource)
+
+            #true
           else
             false
           end
         end
+
+      rescue Octokit::Error => error
+        Rails.logger.error error.message
+        false
       end
 
       # just return the name, as it's remote repository
