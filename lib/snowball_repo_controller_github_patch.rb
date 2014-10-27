@@ -14,31 +14,8 @@ module SnowballRepoControllerGithubPatch
       alias_method_chain :init_gitlab_token, :github
       alias_method_chain :scm_create_repository, :github
 
-      def github_fetch_set_token(user,username,password)
-        puts "** calling github_fetch_set_token in SnowballRepoControllerGithubPatch"
-
-        # FIXME: 这里沿用os那边的code，要改
-        request_url = ScmConfig['github']['url'].to_s + '/api/v3/session'
-        params = {}
-        params["login"] = username
-        params["password"] = password
-        uri = URI.parse(request_url)
-        res = Net::HTTP.post_form(uri, params)
-        case res
-          when Net::HTTPSuccess, Net::HTTPRedirection
-            private_token = (JSON.parse(res.body))['private_token']
-            if user
-              user.github_token = private_token
-              user.save()
-            end
-            private_token
-          when Net::HTTPUnauthorized
-            "HTTPUnauthorized"
-          else
-            puts "error: #{res}"
-            res.to_s
-        end
-
+      def fork
+        puts "** let's show fork"
       end
 
       def init_github_token(repository,user,username,password)

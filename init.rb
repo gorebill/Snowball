@@ -89,6 +89,7 @@ Redmine::Plugin.register :snowball do
     #menu :project_menu, :snowball, { :controller => 'snowball_project_vote', :action => 'test' }, :caption => '开源社区Project Menu', :after => :activity, :param => :project_id
   #end
 
+  permission :repo_fork, :repositories => :fork, :public => true
 
   #追加github建库设置
   # settings :default => {},

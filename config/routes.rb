@@ -12,5 +12,8 @@ Rails.application.routes.draw do
   get 'issues/:issue_id/vote', :to => 'snowball_project_vote#get'
   post 'issues/:issue_id/vote', :to => 'snowball_project_vote#add'
   get 'issues/:project_id/vote/result', :to => 'snowball_project_vote#result'
+
+
+  get 'projects/:id/repository/:repository_id/fork', :to => 'repositories#fork'
 end
 

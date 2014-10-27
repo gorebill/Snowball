@@ -135,7 +135,7 @@ module SnowballGithubCreatorPatch
           #reference http://www.ruby-doc.org/stdlib-1.9.3/libdoc/uri/rdoc/URI.html
           tmp_url = [tmp_url.scheme ? tmp_url.scheme : 'http',
                      '://',
-                     (repository.login ? repository.login + ':' + repository.password + '@' : ''),
+                     (repository.login.nil? || repository.login=='' ? '' : (repository.login + ':' + repository.password + '@')),
                      tmp_url.host,
                      tmp_url.path,
                      (tmp_url.query ? '?':''), tmp_url.query,
@@ -155,19 +155,11 @@ module SnowballGithubCreatorPatch
           #--------------------
 
 
-          if system(*args)
-            if options['update_server_info']
-              Dir.chdir(path) do
-                args = [ git_command, 'fetch' ]
-                args << '-q'
-                args << '--all'
-                args << '-p'
-                system(*args)
-              end
-            end
+          # ref: https://github.com/octokit/octokit.rb
+          # Provide authentication credentials
 
-            # ref: https://github.com/octokit/octokit.rb
-            # Provide authentication credentials
+          # 当login以及password不为空时进行hook
+          if !repository.login.nil? && repository.login != '' && !repository.password.nil? && repository.password != ''
             client = Octokit::Client.new(:login => repository.login.to_s, :password => repository.password.to_s)
             # Fetch the current user
             client.user
@@ -193,9 +185,24 @@ module SnowballGithubCreatorPatch
 
             puts "** hooked to #{repository.url}: #{hook_response.to_attrs}"
 
-            hook_response.is_a?(Sawyer::Resource)
+            return false unless hook_response.is_a?(Sawyer::Resource)
+          else
+            # 当login以及password为空时进行匿名,不hook
+            # go ahead
+          end
 
-            #true
+          if system(*args)
+            if options['update_server_info']
+              Dir.chdir(path) do
+                args = [ git_command, 'fetch' ]
+                args << '-q'
+                args << '--all'
+                args << '-p'
+                system(*args)
+              end
+            end
+
+            true
           else
             false
           end
