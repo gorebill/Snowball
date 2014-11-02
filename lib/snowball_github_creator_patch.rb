@@ -93,31 +93,11 @@ module SnowballGithubCreatorPatch
       def self.create_repository(path, repository = nil)
         puts "** calling SnowballGithubCreatorPatch::create_repository"
 
-        # #create project on github
-        # if User.current.github.nil?
-        #   raise "no github token found in user #{User.current.login}"
-        # end
-
-        attrs = {}
-        # attrs['token'] = User.current.github_token;
-        # # FIXME: 这里token没法填，先留空
-        # attrs['token'] = 'foo';
-        # attrs['title'] = repository.identifier;
-        # attrs['description'] = 'this repository is created by zycode.';
-        # attrs['visibility'] = true;
-        # attrs['project_identifier'] = repository.project.identifier;
-        # self.github_create(attrs);
-
-
         # 获取一些额外的参数，目前未用到
         github_extra=SnowballRepoGithub.find_by_repo_id(repository.id)
 
-
-        # args = [ hg_command, 'init' ]
-        # append_options(args)
-        # args << path
-        # system(*args)
-
+        # TODO 这里最好检验一下repository.identifier是否以#{project}-开头
+        # ...
 
         puts "** chdir to #{ScmConfig['github']['path']}"
 
@@ -126,7 +106,6 @@ module SnowballGithubCreatorPatch
           args = [ git_command, 'clone' ]
           append_options(args)
 
-          # TODO http or https or ssh
           # 不要加Scm的append
           subfix_append=''#ScmConfig['github']['append'].to_s
 
@@ -146,14 +125,6 @@ module SnowballGithubCreatorPatch
 
           # 这里需要强制加project-
           args << tmp_url << default_path(repository.identifier)
-
-          # args << ('http://' + tmp_url + ScmConfig['github']['append'].to_s)
-
-          # tmp_url = repository.login + ':' + repository.password + '@' + tmp_url
-
-          # args << ('http://' + tmp_url + ScmConfig['github']['append'].to_s)
-          #--------------------
-
 
           # ref: https://github.com/octokit/octokit.rb
           # Provide authentication credentials
@@ -238,7 +209,7 @@ module SnowballGithubCreatorPatch
       private
 
       def self.git_command
-        puts "asking self.git_command in SnowballGithubCreatorPatch"
+        puts "** asking self.git_command in SnowballGithubCreatorPatch"
 
         options['git'] || Redmine::Scm::Adapters::GitAdapter::GIT_BIN
       end

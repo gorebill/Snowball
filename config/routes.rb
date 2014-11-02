@@ -15,5 +15,8 @@ Rails.application.routes.draw do
 
 
   get 'projects/:id/repository/:repository_id/fork', :to => 'repositories#fork'
+
+  match '/snowball_repo/create_fork/:id', :to => 'snowball_repo#create_fork', :id => /\d+/, :via => [:get, :post, :put]
+
 end
 

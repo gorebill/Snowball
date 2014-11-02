@@ -372,6 +372,7 @@ module Redmine
 
         def git_cmd(args, options = {}, &block)
           puts "** calling github scm #{args}"
+          puts "#{args.join(' ')}"
 
           #repo_path = root_url || url
           http_path = root_url || url
