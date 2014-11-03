@@ -126,6 +126,8 @@ module SnowballGithubCreatorPatch
           # 这里需要强制加project-
           args << tmp_url << default_path(repository.identifier)
 
+          puts "** system args=#{args.join(' ')}"
+
           # ref: https://github.com/octokit/octokit.rb
           # Provide authentication credentials
 

@@ -3,9 +3,11 @@
 
 class SnowballHookListener < Redmine::Hook::ViewListener
   def view_repositories_show_contextual(context = {})
+    o=''
+
     if context[:repository] && context[:project]
       if(context[:repository].type=='Repository::Github')
-        o = link_to(
+        o << link_to(
             'Fork This Repo',
             {:controller => 'repositories', :action => 'fork', :id => context[:project], :repository_id => context[:repository].identifier},
             :id => 'repo_fork_btn',
@@ -13,9 +15,17 @@ class SnowballHookListener < Redmine::Hook::ViewListener
             :class => 'icon icon-fav'
         )
         o << javascript_include_tag('snowball_repo_fork', :plugin => 'snowball')
-        return o
       end
+
+      if context[:repository] && !context[:repository][:fork_from].nil? && ''!=context[:repository][:fork_from]
+        o << "<h3 id='fork_from_label' style='color:green;'>"
+        o << "Fork From: <label style='text-decoration:underline;'>#{context[:repository][:fork_from]}</label>"
+        o << "</h3>"
+      end
+
     end
+
+    return o.html_safe
   end
 end
 
