@@ -25,7 +25,7 @@
 </p>
 
 <p>
-<%= f.text_field :identifier, :disabled => false, :value=>'f1' %>
+<%= f.text_field :identifier, :disabled => false, :value=>'' %>
 <% unless Redmine::VERSION::MAJOR < 2 || Redmine::VERSION::MINOR < 2 %>
   <em class="info">
     <%= l(:text_length_between, :min => 1, :max => Repository::IDENTIFIER_MAX_LENGTH) %> <%= l(:text_repository_identifier_info).html_safe %>

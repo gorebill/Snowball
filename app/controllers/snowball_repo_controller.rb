@@ -6,6 +6,151 @@ class SnowballRepoController < ApplicationController
   def index
   end
 
+  def new_pull_request
+    @repository=Repository.find_by_identifier(params[:repository_id])
+    @project=@repository.project
+
+    client=Octokit::Client.new(:login => @repository.login, :password => @repository.password)
+    github=Octokit::Repository.from_url(@repository.url.sub(%r{\.git$},''));
+    base=Octokit::Repository.from_url(@repository.fork_from.sub(%r{\.git$},''));
+
+    @repo_base=client.repository(base);
+
+    @repo_head=client.repository(github);
+
+  end
+
+  def new_pull_request_submit
+
+    puts "** pulling pull_request..."
+
+    # ref: http://octokit.github.io/octokit.rb/frames.html#!Octokit.html
+
+    @repository=Repository.find(params[:id])
+    @project=@repository.project
+
+    client=Octokit::Client.new(:login => @repository.login, :password => @repository.password);
+    base=Octokit::Repository.from_url(@repository.fork_from.sub(%r{\.git$},''));
+
+    response=client.create_pull_request(
+        base,
+        params[:base_branch],
+        params[:head_repo].sub(%r{/.*$},'')+':'+params[:head_branch],
+        params[:pull_title],
+        params[:pull_body]);
+
+    if response.is_a?(Sawyer::Resource)
+      puts "** response=#{response}"
+
+      # 跳转到base的pull requst浏览页面
+      # FIXME: 因为不知道base的repo是否redmine的repo，所以没法redirect过去，因此只跳转到当前repo的现实页面
+      #redirect_to :controller=>'snowball_repo', :action=>'show_pull_requests', :id=>@repository.identifier;
+
+      # ref: http://api.rubyonrails.org/classes/ActionController/Redirecting.html
+      redirect_to "#{project_path(@project)}/repository/#{(@repository.identifier)}"
+      return;
+    else
+      raise '服务器与Github连接异常，请稍后再试'
+    end
+
+  rescue Exception => error
+    puts "** error=#{error}"
+    #raise error
+    render_error :message => error.to_s
+  end
+
+  def show_pull_requests
+
+    @repository=Repository.find_by_identifier(params[:id])
+    @project=@repository.project
+
+    client=Octokit::Client.new(:login => @repository.login, :password => @repository.password)
+    github=Octokit::Repository.from_url(@repository.url.sub(%r{\.git$},''));
+
+    # ref: http://octokit.github.io/octokit.rb/Octokit/Client/PullRequests.html#pull_request_files-instance_method
+
+    # pull requests files参考response
+    # ref: https://developer.github.com/v3/pulls/#list-pull-requests-files
+
+    # pull requests list
+    # ref: https://developer.github.com/v3/pulls/#list-pull-requests
+    # 对应页面https://github.com/gorebill/test/pulls
+    response=client.pull_requests(github, :state => 'open')
+
+    if !response.nil?
+      @merge_requests=response;
+    else
+      raise '服务器与Github连接异常，请稍后再试'
+    end
+
+  rescue Exception=>error
+    # raise error
+    (render_error error.to_s; return)
+  end
+
+  def merge_pull_request
+    @repository=Repository.find_by_identifier(params[:id])
+    @project=@repository.project
+
+    client=Octokit::Client.new(:login => @repository.login, :password => @repository.password)
+    github=Octokit::Repository.from_url(@repository.url.sub(%r{\.git$},''));
+
+    pull_number=params[:pull_number];
+
+    response=client.pull_request(github, pull_number)
+    #response=client.pull_request_comments(github, pull_number);
+
+    if response.is_a?(Sawyer::Resource)
+      @merge_request=response;
+    else
+      raise '服务器与Github连接异常，请稍后再试'
+    end
+
+  rescue Exception=>error
+    # raise error
+    (render_error error.to_s; return)
+  end
+
+  def merge_pull_request_submit
+    puts "** merging pull request"
+
+    oper_type=params[:oper_type];
+
+    @repository=Repository.find(params[:id])
+
+    client=Octokit::Client.new(:login => @repository.login, :password => @repository.password);
+    github=Octokit::Repository.from_url(@repository.url.sub(%r{\.git$},''));
+
+
+    # merge pull request
+    # ref: http://octokit.github.io/octokit.rb/Octokit/Client/PullRequests.html#merge_pull_request-instance_method
+
+    if oper_type=='close'
+      response=client.close_pull_request(github, params[:merge_number]);
+
+      if response.is_a?(Sawyer::Resource)
+        redirect_to :controller=>'snowball_repo',:action=>'show_pull_requests',:id=>@repository.identifier
+      else
+        raise '服务器与Github连接异常，请稍后再试'
+      end
+
+    elsif oper_type=='merge'
+      response=client.merge_pull_request(github, params[:merge_number]);
+
+      if response.is_a?(Sawyer::Resource)
+        redirect_to :controller=>'snowball_repo',:action=>'show_pull_requests',:id=>@repository.identifier
+      else
+        raise '服务器与Github连接异常，请稍后再试'
+      end
+    else
+      raise "未定义的操作 (#{oper_type})"
+    end
+
+  rescue Exception=>error
+    # raise error
+    (render_error error.to_s; return)
+  end
+
   def create_fork
     puts "** calling create_fork #{params}"
 

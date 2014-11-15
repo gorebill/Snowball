@@ -7,6 +7,7 @@ class SnowballHookListener < Redmine::Hook::ViewListener
 
     if context[:repository] && context[:project]
       if(context[:repository].type=='Repository::Github')
+        o << "<span id='repo_github_extra'>"
         o << link_to(
             'Fork This Repo',
             {:controller => 'repositories', :action => 'fork', :id => context[:project], :repository_id => context[:repository].identifier},
@@ -14,13 +15,32 @@ class SnowballHookListener < Redmine::Hook::ViewListener
             :style => 'margin-right:20px;',
             :class => 'icon icon-fav'
         )
+        o << link_to(
+            'Show Pull Requests',
+            {:controller => 'snowball_repo', :action => 'show_pull_requests', :id => context[:repository].identifier},
+            :id => 'repo_show_pull_requests_btn',
+            :style => 'margin-right:20px;',
+            :class => 'icon icon-attachment'
+        )
+        o << "</span>"
         o << javascript_include_tag('snowball_repo_fork', :plugin => 'snowball')
       end
 
       if context[:repository] && !context[:repository][:fork_from].nil? && ''!=context[:repository][:fork_from]
-        o << "<h3 id='fork_from_label' style='color:green;'>"
+        o << "<div id='fork_from_section'>"
+        o << "<h3 id='fork_from_label' style='color:green;display:inline;'>"
         o << "Fork From: <label style='text-decoration:underline;'>#{context[:repository][:fork_from]}</label>"
         o << "</h3>"
+        o << "<span style='margin-left:15px;'>"
+        o << link_to(
+            'New Pull Request',
+            {:controller => 'snowball_repo', :action => 'new_pull_request', :id => context[:project], :repository_id => context[:repository].identifier},
+            :id => 'repo_new_pull_request_btn',
+            :style => '',
+            :class => 'icon icon-duplicate'
+        )
+        o << "</span>"
+        o << "</div>"
       end
 
     end
